@@ -1,0 +1,39 @@
+.fw-500 {
+  font-weight: 500;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-end {
+  text-align: end;
+}
+
+.text-success {
+  color: var(--success);
+}
+
+.text-danger {
+  color: var(--danger);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.section--title {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 800;
+  margin-top: 60px;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.section--subtitle {
+  max-width: 560px;
+  margin: 0 auto 60px;
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  text-align: center;
+}

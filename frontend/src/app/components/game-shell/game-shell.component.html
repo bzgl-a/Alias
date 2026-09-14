@@ -1,0 +1,36 @@
+<div class="shell-content" [class.is-blurred]="showModal()">
+  <router-outlet />
+</div>
+
+<app-modal
+  [open]="showModal()"
+  title="Добро пожаловать!"
+  (close)="onModalClose()"
+>
+  <div class="d-flex flex-column gap-2">
+    <p class="modal--hint">Введите ваш никнейм, чтобы присоединиться.</p>
+
+    <div class="modal--field">
+      <input
+        #nameInput
+        class="form-input"
+        type="text"
+        maxlength="24"
+        placeholder="Ваш никнейм"
+        [value]="playerName()"
+        (input)="playerName.set(nameInput.value)"
+        (keyup.enter)="confirmName()"
+        autofocus
+      />
+    </div>
+
+    <button
+      type="button"
+      class="btn btn--primary btn--block"
+      [disabled]="!playerName().trim() || isSubmitting()"
+      (click)="confirmName()"
+    >
+      {{ isSubmitting() ? "Входим..." : "Войти" }}
+    </button>
+  </div>
+</app-modal>

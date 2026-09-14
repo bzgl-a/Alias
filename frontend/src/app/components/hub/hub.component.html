@@ -1,0 +1,56 @@
+<section class="container">
+  <div
+    class="vh-100 d-flex flex-column align-items-center justify-content-center gap-5"
+  >
+    <div class="screen-head">
+      <h1 class="screen-head--title">Выберите режим</h1>
+      <p class="screen-head--text">
+        Создайте лобби и пригласите друзей или присоединитесь к существующей
+        игре по коду.
+      </p>
+    </div>
+
+    <div class="lobby-hero">
+      <div class="lobby-hero--card">
+        <span class="lobby-hero--icon">🏠</span>
+        <h2 class="lobby-hero--title">Создать лобби</h2>
+        <p class="lobby-hero--text">
+          Настройте игру, получите код и пригласите игроков
+        </p>
+
+        <button
+          type="button"
+          class="btn btn--primary btn--block"
+          (click)="createLobby()"
+        >
+          Создать
+        </button>
+      </div>
+
+      <div class="lobby-hero--card">
+        <span class="lobby-hero--icon">🔗</span>
+        <h2 class="lobby-hero--title">Присоединиться</h2>
+        <p class="lobby-hero--text">Введите код лобби от друга</p>
+        <div class="lobby-join">
+          <input
+            class="lobby-join--input"
+            type="text"
+            maxlength="6"
+            placeholder="КОД"
+            [value]="lobbyCode()"
+            (input)="onCodeInput($event)"
+            (keyup.enter)="joinLobby()"
+          />
+          <button
+            type="button"
+            class="btn btn--primary"
+            [disabled]="!lobbyCode()"
+            (click)="joinLobby()"
+          >
+            Войти
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,30 @@
+:root {
+  --bg: #141414;
+  --bg-elevated: #1d1d1d;
+  --bg-card: #202020;
+  --surface: #2a2a2a;
+
+  --text: #f1f1f1;
+  --text-muted: #a8a8a8;
+
+  --accent: #6c8cff;
+  --accent-soft: rgba(108, 140, 255, 0.15);
+
+  --border: rgba(255, 255, 255, 0.08);
+
+  --gradient: linear-gradient(158deg, #2f2f2f 0%, #202020 100%);
+
+  --danger: #ff6b6b;
+  --success: #81c784;
+
+  --radius-sm: 12px;
+  --radius: 20px;
+  --radius-lg: 32px;
+
+  --container: 1200px;
+
+  --shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 40px rgba(108, 140, 255, 0.25);
+
+  --t: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

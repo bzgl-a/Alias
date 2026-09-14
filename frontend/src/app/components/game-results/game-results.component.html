@@ -1,0 +1,30 @@
+<div class="container vh-100 d-flex align-items-center justify-content-center">
+  <div class="d-flex flex-column align-items-center">
+    <h1 class="title">Игра окончена!</h1>
+
+    <ul class="final-scores p-0 mb-3 d-flex flex-column gap-1">
+      @for (score of scores(); track score.id) {
+        <li [class.winner]="score.id === winnerTeamId()">
+          {{ score.name }}: {{ score.score }}
+          @if (score.id === winnerTeamId()) {
+            🏆
+          }
+        </li>
+      }
+    </ul>
+
+    <div class="d-flex align-items-center gap-2">
+      @if (isHost()) {
+        <button type="button" class="btn btn--primary" (click)="playAgain()">
+          Играть ещё раз
+        </button>
+      } @else {
+        <p class="text-muted">Ждём, пока хост начнёт новую игру...</p>
+      }
+
+      <button type="button" class="btn btn--ghost" (click)="leaveLobby()">
+        Покинуть лобби
+      </button>
+    </div>
+  </div>
+</div>

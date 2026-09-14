@@ -1,0 +1,44 @@
+.form-field {
+  margin-bottom: 20px;
+}
+
+.form-field label,
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-field input,
+.form-field textarea,
+.form-field select,
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+
+  transition: var(--t);
+  resize: vertical;
+}
+
+.form-field input::placeholder,
+.form-field textarea::placeholder,
+.form-input::placeholder {
+  color: #666;
+}
+
+.form-field input:focus,
+.form-field textarea:focus,
+.form-field select:focus,
+.form-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}

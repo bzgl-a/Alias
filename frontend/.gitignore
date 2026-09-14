@@ -1,0 +1,19 @@
+# dependencies
+**/node_modules/
+
+# build
+**/dist/
+
+# environment
+**/.env
+**/.env.*
+
+# Angular
+frontend/.angular/
+
+# logs
+**/*.log
+
+# OS
+.DS_Store
+Thumbs.db

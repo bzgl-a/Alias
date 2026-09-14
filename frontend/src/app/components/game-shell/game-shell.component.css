@@ -1,0 +1,10 @@
+.shell-content {
+  min-height: 100vh;
+  transition: filter 0.3s ease;
+}
+
+.shell-content.is-blurred {
+  filter: blur(8px);
+  pointer-events: none;
+  user-select: none;
+}

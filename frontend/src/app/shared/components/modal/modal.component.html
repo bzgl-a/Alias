@@ -1,0 +1,10 @@
+@if (open()) {
+  <div class="modal is-open" (click)="onBackdrop($event)">
+    <div class="modal--box">
+      @if (title()) {
+        <h3 class="modal--title">{{ title() }}</h3>
+      }
+      <ng-content />
+    </div>
+  </div>
+}

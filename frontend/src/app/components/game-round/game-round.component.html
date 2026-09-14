@@ -1,0 +1,241 @@
+<div class="game-layout">
+  <aside class="teams teams--left">
+    @for (score of leftTeams(); track score.id) {
+      <div class="team-card card p-2">
+        <div class="d-flex align-items-center justify-content-between gap-2">
+          <strong>{{ score.name }}</strong>
+          <span class="text-muted small">
+            {{ score.score }} / {{ targetScore() }}
+          </span>
+        </div>
+        <div class="team-members mt-2 d-flex flex-column gap-1">
+          @for (member of getTeamMembers(score.id); track member) {
+            <span class="small">
+              {{ member }}
+              @if (member === explainerName()) {
+                <span class="text-success">👑</span>
+              }
+            </span>
+          }
+        </div>
+      </div>
+    }
+  </aside>
+  <main class="game-content">
+    @if (phase() === "waiting") {
+      <div class="card p-3 text-center">
+        <p class="turn-info">
+          Ход команды <strong>{{ currentTeamName() }}</strong>
+        </p>
+        <p class="text-muted">
+          Капитан: <strong>{{ explainerName() }}</strong>
+        </p>
+        <ul class="p-0 m-0 mt-1 mb-3 d-flex flex-column gap-1 list-unstyled">
+          @for (userId of teamMemberIds(); track userId) {
+            <li
+              class="member-card px-2 py-1 d-flex align-items-center justify-content-between"
+            >
+              {{ memberName(userId) }}
+              @if (userId === currentExplainerId()) {
+                <span class="text-muted"> (капитан) </span>
+              } @else if (isMemberReady(userId)) {
+                <strong class="text-success"> готов </strong>
+              } @else {
+                <span class="text-muted"> не готов </span>
+              }
+            </li>
+          }
+        </ul>
+        @if (isMyTeamTurn()) {
+          @if (isExplainer()) {
+            <button
+              type="button"
+              class="btn btn--primary"
+              [disabled]="!allTeammatesReady()"
+              (click)="startRound()"
+            >
+              Начать раунд
+            </button>
+          } @else {
+            @if (isReady()) {
+              <button
+                type="button"
+                class="btn btn--ghost"
+                (click)="toggleReady()"
+              >
+                Отменить готовность
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="btn btn--primary"
+                (click)="toggleReady()"
+              >
+                Готов
+              </button>
+            }
+          }
+        }
+      </div>
+    } @else if (phase() === "active") {
+      <div class="turn-info d-flex flex-column align-items-center gap-1">
+        <span>
+          Ход команды <strong>{{ currentTeamName() }}</strong>
+        </span>
+        <span class="text-muted">
+          Объясняет: <strong>{{ explainerName() }}</strong>
+        </span>
+      </div>
+      <p class="timer">{{ secondsLeft() }}с</p>
+      @if (isExplainer()) {
+        <div class="word-box card p-3 text-center">
+          <h2>{{ word() }}</h2>
+          <div class="mt-2 d-flex align-items-center gap-2">
+            <button
+              type="button"
+              class="btn btn--primary"
+              (click)="markCorrect()"
+            >
+              Угадали ✓
+            </button>
+            <button type="button" class="btn btn--ghost" (click)="markSkip()">
+              Пропустить →
+            </button>
+          </div>
+        </div>
+      }
+      @if (guessedWords().length > 0 || skippedWords().length > 0) {
+        <div class="card p-3 mt-2" style="max-width: 500px; width: 100%">
+          <div class="d-flex gap-3">
+            @if (guessedWords().length > 0) {
+              <div class="flex-fill">
+                <strong class="text-success">
+                  ✓ Угадано: {{ guessedWords().length }}
+                </strong>
+                <div class="mt-2 d-flex flex-column gap-1">
+                  @for (word of guessedWords(); track word) {
+                    <div class="text-success small">{{ word }}</div>
+                  }
+                </div>
+              </div>
+            }
+            @if (skippedWords().length > 0) {
+              <div class="flex-fill">
+                <strong class="text-danger">
+                  ✗ Пропущено: {{ skippedWords().length }}
+                </strong>
+                <div class="mt-2 d-flex flex-column gap-1">
+                  @for (word of skippedWords(); track word) {
+                    <div class="text-end text-danger small">{{ word }}</div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    } @else if (phase() === "review") {
+      <div class="review-box card w-100 p-4 d-flex flex-column gap-1">
+        <div class="turn-info d-flex flex-column align-items-center gap-1">
+          <span> Ход завершен! </span>
+          <span>
+            Команда <strong> {{ currentTeamName() }} </strong>
+          </span>
+        </div>
+        <div>
+          <h3 class="mb-1 text-success">
+            ✓ Угаданные ({{ guessedWords().length }})
+          </h3>
+          @if (guessedWords().length === 0) {
+            <p class="text-muted">—</p>
+          } @else {
+            <ul class="word-list">
+              @for (word of guessedWords(); track word) {
+                <li class="word-item word-item--guessed">
+                  <span class="word-text"> {{ word }} </span>
+                  @if (isExplainer()) {
+                    <button
+                      type="button"
+                      class="btn btn--small btn--ghost"
+                      (click)="adjustWord(word, 'skipped')"
+                      title="Переместить в пропущенные"
+                    >
+                      −
+                    </button>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </div>
+        <div>
+          <h3 class="mb-1 text-danger">
+            ✗ Пропущенные ({{ skippedWords().length }})
+          </h3>
+          @if (skippedWords().length === 0) {
+            <p class="text-muted">—</p>
+          } @else {
+            <ul class="word-list">
+              @for (word of skippedWords(); track word) {
+                <li class="word-item word-item--skipped">
+                  <span class="word-text"> {{ word }} </span>
+                  @if (isExplainer()) {
+                    <button
+                      type="button"
+                      class="btn btn--small btn--ghost"
+                      (click)="adjustWord(word, 'guessed')"
+                      title="Переместить в угаданные"
+                    >
+                      +
+                    </button>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </div>
+        @if (isExplainer()) {
+          <button
+            type="button"
+            class="btn btn--primary"
+            (click)="confirmReview()"
+          >
+            Подтвердить и продолжить
+          </button>
+        } @else {
+          <p class="mt-2 text-center text-muted">
+            {{ explainerName() }} проверяет результаты...
+          </p>
+        }
+      </div>
+    }
+    @if (lastTurnResult()) {
+      <p class="turn-result mt-2 text-muted">
+        Прошлый ход: угадано {{ lastTurnResult()!.guessed }}, пропущено
+        {{ lastTurnResult()!.skipped }}
+      </p>
+    }
+  </main>
+  <aside class="teams teams--right">
+    @for (score of rightTeams(); track score.id) {
+      <div class="team-card card p-2">
+        <div class="d-flex align-items-center justify-content-between gap-2">
+          <strong>{{ score.name }}</strong>
+          <span class="text-muted small">
+            {{ score.score }} / {{ targetScore() }}
+          </span>
+        </div>
+        <div class="team-members mt-2 d-flex flex-column gap-1">
+          @for (member of getTeamMembers(score.id); track member) {
+            <span class="small">
+              {{ member }}
+              @if (member === explainerName()) {
+                <span class="text-success">👑</span>
+              }
+            </span>
+          }
+        </div>
+      </div>
+    }
+  </aside>
+</div>

@@ -1,0 +1,117 @@
+.game-layout {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(400px, 1fr) minmax(
+      180px,
+      240px
+    );
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.teams {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.teams--left {
+  align-items: stretch;
+}
+
+.teams--right {
+  align-items: stretch;
+}
+
+.team-card {
+  width: 100%;
+}
+
+.game-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 2rem;
+}
+
+.score-item strong {
+  font-size: 1.1rem;
+}
+
+.turn-info {
+  font-size: 1.1rem;
+}
+
+.member-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.timer {
+  font-size: 2.5rem;
+  font-weight: 900;
+  font-family: monospace;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+.word-box {
+  min-width: 320px;
+}
+
+.word-box h2 {
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.turn-result {
+  font-size: 0.9rem;
+}
+
+.review-box {
+  max-width: 480px;
+}
+
+h3 {
+  font-size: 1rem;
+}
+
+.word-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.word-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.word-item--guessed {
+  border-left: 3px solid var(--color-success, #2e7d32);
+}
+
+.word-item--skipped {
+  border-left: 3px solid var(--color-danger, #c62828);
+}
+
+.word-text {
+  flex: 1;
+}
+
+.btn--small {
+  padding: 0.15rem 0.55rem;
+  font-size: 0.85rem;
+  line-height: 1;
+  min-width: 28px;
+}

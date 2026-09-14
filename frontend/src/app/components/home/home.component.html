@@ -1,0 +1,61 @@
+<section class="hero">
+  <div class="hero--inner reveal is-visible">
+    <span class="hero--badge"> GachiMuchi </span>
+    <h1 class="hero--title">Объясни. Угадай.<br /><span>Побеждай.</span></h1>
+    <p class="hero--text">
+      <strong>Alias</strong> — динамичная игра для компании: объясняй слова
+      команде, не называя их, и набирай очки. Таймер тикает, азарт растёт.
+      Готовы испытать словарный запас?
+    </p>
+    <div class="hero--btns">
+      <button type="button" class="btn btn--primary" (click)="onPlayClick()">
+        ▶ Играть
+      </button>
+      <button
+        type="button"
+        class="btn btn--ghost"
+        (click)="rulesOpen.set(true)"
+      >
+        📖 Как играть
+      </button>
+    </div>
+  </div>
+</section>
+
+<app-modal
+  [open]="rulesOpen()"
+  title="Правила игры"
+  (close)="rulesOpen.set(false)"
+>
+  <ul class="modal--list">
+    <li><strong>01</strong> Разделитесь на 2 или более команд.</li>
+    <li>
+      <strong>02</strong> Одна команда за раз: один объясняет слово, остальные
+      угадывают.
+    </li>
+    <li>
+      <strong>03</strong> Нельзя использовать однокоренные слова и жесты-буквы.
+    </li>
+    <li>
+      <strong>04</strong> Угадали — жмите «Угадали», слово засчитано, +1 очко.
+    </li>
+    <li>
+      <strong>05</strong> Не выходит — «Пропустить» (если включён штраф, −1
+      очко).
+    </li>
+    <li>
+      <strong>06</strong> Когда таймер обнулится — ход переходит к следующей
+      команде.
+    </li>
+    <li>
+      <strong>07</strong> Побеждает команда, первой набравшая очки до цели.
+    </li>
+  </ul>
+  <button
+    type="button"
+    class="btn btn--primary btn--block modal--close"
+    (click)="rulesOpen.set(false)"
+  >
+    Понятно!
+  </button>
+</app-modal>

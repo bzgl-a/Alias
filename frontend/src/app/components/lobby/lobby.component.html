@@ -1,0 +1,218 @@
+@if (currentLobby() && !isMember()) {
+  <div
+    class="container pt-5 d-flex flex-column align-items-center justify-content-center"
+    style="min-height: 80vh"
+  >
+    <div class="card p-4 text-center" style="max-width: 400px; width: 100%">
+      <h2 class="mb-3">Вы не состоите в этом лобби</h2>
+      <p class="text-muted mb-4">
+        Чтобы участвовать в игре и видеть команды, необходимо присоединиться.
+      </p>
+
+      <button
+        class="btn btn--primary w-100"
+        (click)="joinCurrentLobby()"
+        [disabled]="isJoining()"
+      >
+        {{ isJoining() ? "Присоединение..." : "Присоединиться к лобби" }}
+      </button>
+    </div>
+  </div>
+} @else if (currentLobby() && isMember()) {
+  @if (isWaiting()) {
+    <div class="container pt-5">
+      <div class="vh-100 d-flex flex-column align-items-center gap-3">
+        <h1 class="title">Создание лобби</h1>
+
+        <div
+          class="card d-flex align-items-center justify-content-center gap-2"
+        >
+          <span class="text-muted fw-500">Код</span>
+          <span class="lobby-code">{{ currentLobby()?.code }}</span>
+          <button
+            type="button"
+            class="btn btn--ghost lobby-code--copy"
+            (click)="copyCode()"
+          >
+            Копировать
+          </button>
+        </div>
+
+        <div class="w-100 d-flex align-items-start gap-5">
+          <div class="w-100 card d-flex flex-column gap-1">
+            <div class="d-flex align-items-center justify-content-between">
+              <span class="players-title">👤 Участники</span>
+              <p class="text-muted">
+                Готово {{ readyPlayersCount() }} /
+                {{ currentLobby()?.members?.length }}
+              </p>
+            </div>
+            @for (player of currentLobby()?.members; track player.userId) {
+              <div
+                class="player-card d-flex align-items-center justify-content-between"
+              >
+                <div class="d-flex align-items-center gap-1">
+                  <span class="waiting-player--avatar">{{
+                    player.nickname.charAt(0).toUpperCase()
+                  }}</span>
+                  <span>{{ player.nickname }}</span>
+                </div>
+
+                @if (player.isReady) {
+                  <span class="text-success">Готов</span>
+                }
+                @if (!player.isReady) {
+                  <span class="text-danger">Не готов</span>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="w-100 card d-flex flex-column gap-1 teams-card">
+            <div class="d-flex align-items-center justify-content-between">
+              <span class="players-title">🛡️ Команды</span>
+
+              @if (isHost()) {
+                <div class="d-flex gap-1 mt-1">
+                  <input
+                    #teamNameInput
+                    class="team-block--input"
+                    type="text"
+                    maxlength="32"
+                    placeholder="Название команды"
+                    [value]="newTeamName()"
+                    (input)="onTeamNameChange(teamNameInput.value)"
+                    (keydown.enter)="createTeam()"
+                  />
+                  <button
+                    type="button"
+                    class="btn btn--primary"
+                    (click)="createTeam()"
+                  >
+                    Добавить
+                  </button>
+                </div>
+              }
+            </div>
+
+            @for (team of currentLobby()?.teams; track team.id) {
+              <div class="team-block">
+                <div
+                  class="d-flex align-items-center justify-content-between mb-1"
+                >
+                  <span class="fw-500">{{ team.name }}</span>
+
+                  <div class="d-flex gap-1">
+                    @if (myTeamId() === team.id) {
+                      <button
+                        type="button"
+                        class="btn btn--ghost btn--sm"
+                        (click)="leaveTeam()"
+                      >
+                        Покинуть
+                      </button>
+                    } @else {
+                      <button
+                        type="button"
+                        class="btn btn--primary btn--sm"
+                        (click)="joinTeam(team.id)"
+                      >
+                        Вступить
+                      </button>
+                    }
+
+                    @if (isHost()) {
+                      <button
+                        type="button"
+                        class="btn btn--ghost btn--sm"
+                        (click)="deleteTeam(team.id)"
+                      >
+                        Удалить
+                      </button>
+                    }
+                  </div>
+                </div>
+
+                @for (member of membersInTeam(team.id); track member.userId) {
+                  <div class="d-flex align-items-center gap-1">
+                    <span class="waiting-player--avatar">{{
+                      member.nickname.charAt(0).toUpperCase()
+                    }}</span>
+                    <span>
+                      {{ member.nickname }}
+                      @if (isMe(member.userId)) {
+                        (вы)
+                      }
+                    </span>
+                  </div>
+                }
+
+                @if (membersInTeam(team.id).length === 0) {
+                  <p class="text-muted">Пока никого</p>
+                }
+              </div>
+            }
+
+            @if (unassignedMembers().length > 0) {
+              <div class="team-block team-block--unassigned">
+                <span class="fw-500 text-muted mb-1">Без команды</span>
+
+                @for (member of unassignedMembers(); track member.userId) {
+                  <div class="d-flex align-items-center gap-1">
+                    <span class="waiting-player--avatar">{{
+                      member.nickname.charAt(0).toUpperCase()
+                    }}</span>
+                    <span>
+                      {{ member.nickname }}
+                      @if (isMe(member.userId)) {
+                        (вы)
+                      }
+                    </span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="action-bar">
+          @if (isHost()) {
+            <button
+              type="button"
+              class="btn btn--primary"
+              [disabled]="!allPlayersReady() || !canStartGame()"
+              (click)="startGame()"
+            >
+              Начать игру
+            </button>
+          }
+
+          <button
+            type="button"
+            class="btn btn--ready btn--primary"
+            (click)="toggleReady()"
+          >
+            {{ isCurrentUserReady() ? "Не готов" : "Готов" }}
+          </button>
+
+          <button type="button" class="btn btn--ghost" (click)="leaveLobby()">
+            Покинуть лобби
+          </button>
+        </div>
+      </div>
+    </div>
+  } @else if (isInProgress()) {
+    <app-game-round />
+  } @else if (isFinished()) {
+    <app-game-results />
+  }
+} @else {
+  <div
+    class="container pt-5 d-flex justify-content-center align-items-center"
+    style="min-height: 80vh"
+  >
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Загрузка...</span>
+    </div>
+  </div>
+}
