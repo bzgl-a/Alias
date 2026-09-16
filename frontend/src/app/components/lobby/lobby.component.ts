@@ -34,7 +34,8 @@ export class LobbyComponent implements OnInit {
 
   readonly newTeamName = signal('');
   readonly isJoining = signal(false);
-  private readonly hasJoined = signal(false);
+
+  private readonly hasLeftLobby = signal(false);
 
   readonly editingTeamId = signal<string | null>(null);
   readonly editingTeamName = signal('');
@@ -45,6 +46,7 @@ export class LobbyComponent implements OnInit {
   readonly displayRoundSeconds = computed(
     () => this.roundSecondsDraft() ?? this.currentLobby()?.roundSeconds ?? 60,
   );
+
   readonly displayTargetScore = computed(
     () => this.targetScoreDraft() ?? this.currentLobby()?.targetScore ?? 30,
   );
@@ -61,9 +63,11 @@ export class LobbyComponent implements OnInit {
   readonly isWaiting = computed(
     () => this.currentLobby()?.status === 'waiting',
   );
+
   readonly isInProgress = computed(
     () => this.currentLobby()?.status === 'in_progress',
   );
+
   readonly isFinished = computed(
     () => this.currentLobby()?.status === 'finished',
   );
@@ -77,19 +81,23 @@ export class LobbyComponent implements OnInit {
 
   readonly allPlayersReady = computed(() => {
     const members = this.currentLobby()?.members ?? [];
+
     return members.length > 0 && members.every((player) => player.isReady);
   });
 
   readonly isHost = computed(() => {
     const lobby = this.currentLobby();
     const user = this.currentUser();
+
     return !!(lobby && user && lobby.hostId === user.id);
   });
 
   readonly isCurrentUserReady = computed(() => {
     const lobby = this.currentLobby();
     const userId = this.currentUser()?.id;
+
     if (!lobby || !userId) return false;
+
     return (
       lobby.members.find((member) => member.userId === userId)?.isReady ?? false
     );
@@ -98,7 +106,9 @@ export class LobbyComponent implements OnInit {
   readonly myTeamId = computed(() => {
     const lobby = this.currentLobby();
     const userId = this.currentUser()?.id;
+
     if (!lobby || !userId) return null;
+
     return lobby.members.find((m) => m.userId === userId)?.teamId ?? null;
   });
 
@@ -108,7 +118,9 @@ export class LobbyComponent implements OnInit {
 
   readonly canStartGame = computed(() => {
     const lobby = this.currentLobby();
+
     if (!lobby || lobby.teams.length < 2) return false;
+
     return lobby.teams.every((team) =>
       lobby.members.some((m) => m.teamId === team.id),
     );
@@ -120,8 +132,13 @@ export class LobbyComponent implements OnInit {
       const lobby = this.currentLobby();
       const member = this.isMember();
 
-      if (connected && lobby && !member && !this.hasJoined()) {
-        this.hasJoined.set(true);
+      if (
+        connected &&
+        lobby &&
+        !member &&
+        !this.hasLeftLobby() &&
+        !this.isJoining()
+      ) {
         this.joinCurrentLobby();
       }
     });
@@ -129,6 +146,7 @@ export class LobbyComponent implements OnInit {
 
   ngOnInit(): void {
     const lobbyId = this.route.snapshot.paramMap.get('id');
+
     if (!lobbyId) {
       this.router.navigate(['/hub']);
       return;
@@ -147,7 +165,10 @@ export class LobbyComponent implements OnInit {
 
   public joinCurrentLobby(): void {
     const lobby = this.currentLobby();
-    if (!lobby?.code) return;
+
+    if (!lobby?.code || this.isJoining() || this.hasLeftLobby()) {
+      return;
+    }
 
     this.isJoining.set(true);
 
@@ -155,7 +176,7 @@ export class LobbyComponent implements OnInit {
       next: () => {
         this.isJoining.set(false);
       },
-      error: (err) => {
+      error: () => {
         this.isJoining.set(false);
         this.toastService.danger('Не удалось подключиться к лобби');
       },
@@ -163,9 +184,15 @@ export class LobbyComponent implements OnInit {
   }
 
   public leaveLobby(): void {
+    this.hasLeftLobby.set(true);
+
     this.lobbyService.leaveLobby().subscribe({
-      next: () => this.router.navigate(['/home']),
+      next: () => {
+        this.router.navigate(['/hub']);
+      },
       error: () => {
+        this.hasLeftLobby.set(false);
+
         this.toastService.danger('Ошибка при выходе из лобби');
       },
     });
@@ -194,6 +221,7 @@ export class LobbyComponent implements OnInit {
 
   public copyCode(): void {
     const code = this.currentLobby()?.code;
+
     if (!code) return;
 
     navigator.clipboard.writeText(code);
@@ -205,6 +233,7 @@ export class LobbyComponent implements OnInit {
 
   public createTeam(): void {
     const name = this.newTeamName().trim();
+
     if (!name) return;
 
     this.lobbyService.createTeam(name).subscribe({
@@ -217,16 +246,23 @@ export class LobbyComponent implements OnInit {
 
   public onRoundSecondsChange(value: string): void {
     const num = Number(value);
-    if (!Number.isNaN(num)) this.roundSecondsDraft.set(num);
+
+    if (!Number.isNaN(num)) {
+      this.roundSecondsDraft.set(num);
+    }
   }
 
   public onTargetScoreChange(value: string): void {
     const num = Number(value);
-    if (!Number.isNaN(num)) this.targetScoreDraft.set(num);
+
+    if (!Number.isNaN(num)) {
+      this.targetScoreDraft.set(num);
+    }
   }
 
   public saveRoundSeconds(): void {
     const value = this.roundSecondsDraft();
+
     if (value === null || value === this.currentLobby()?.roundSeconds) {
       this.roundSecondsDraft.set(null);
       return;
@@ -234,21 +270,28 @@ export class LobbyComponent implements OnInit {
 
     if (value < 10 || value > 300) {
       this.toastService.danger('Время на раунд должно быть от 10 до 300');
+
       this.roundSecondsDraft.set(null);
       return;
     }
 
-    this.lobbyService.updateSettings({ roundSeconds: value }).subscribe({
-      next: () => this.roundSecondsDraft.set(null),
-      error: () => {
-        this.toastService.danger('Не удалось изменить время раунда');
-        this.roundSecondsDraft.set(null);
-      },
-    });
+    this.lobbyService
+      .updateSettings({
+        roundSeconds: value,
+      })
+      .subscribe({
+        next: () => this.roundSecondsDraft.set(null),
+        error: () => {
+          this.toastService.danger('Не удалось изменить время раунда');
+
+          this.roundSecondsDraft.set(null);
+        },
+      });
   }
 
   public saveTargetScore(): void {
     const value = this.targetScoreDraft();
+
     if (value === null || value === this.currentLobby()?.targetScore) {
       this.targetScoreDraft.set(null);
       return;
@@ -256,17 +299,23 @@ export class LobbyComponent implements OnInit {
 
     if (value < 5 || value > 500) {
       this.toastService.danger('Количество очков должно быть от 5 до 500');
+
       this.targetScoreDraft.set(null);
       return;
     }
 
-    this.lobbyService.updateSettings({ targetScore: value }).subscribe({
-      next: () => this.targetScoreDraft.set(null),
-      error: () => {
-        this.toastService.danger('Не удалось изменить количество очков');
-        this.targetScoreDraft.set(null);
-      },
-    });
+    this.lobbyService
+      .updateSettings({
+        targetScore: value,
+      })
+      .subscribe({
+        next: () => this.targetScoreDraft.set(null),
+        error: () => {
+          this.toastService.danger('Не удалось изменить количество очков');
+
+          this.targetScoreDraft.set(null);
+        },
+      });
   }
 
   public startRenameTeam(teamId: string, currentName: string): void {
@@ -280,11 +329,13 @@ export class LobbyComponent implements OnInit {
 
   public confirmRenameTeam(teamId: string): void {
     const name = this.editingTeamName().trim();
+
     this.editingTeamId.set(null);
 
     const currentName = this.currentLobby()?.teams.find(
       (t) => t.id === teamId,
     )?.name;
+
     if (!name || name === currentName) return;
 
     this.lobbyService.renameTeam(teamId, name).subscribe({
@@ -336,14 +387,22 @@ export class LobbyComponent implements OnInit {
 
   public getStartHint(): string {
     const lobby = this.currentLobby();
+
     if (!lobby) return '';
 
     const hints: string[] = [];
-    if (lobby.teams.length < 2) hints.push('нужно минимум 2 команды');
+
+    if (lobby.teams.length < 2) {
+      hints.push('нужно минимум 2 команды');
+    }
+
     if (!this.canStartGame() && lobby.teams.length >= 2) {
       hints.push('в каждой команде должен быть хотя бы 1 игрок');
     }
-    if (!this.allPlayersReady()) hints.push('не все игроки готовы');
+
+    if (!this.allPlayersReady()) {
+      hints.push('не все игроки готовы');
+    }
 
     return hints.join(', ');
   }
