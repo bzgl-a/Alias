@@ -90,4 +90,17 @@ export class LobbyRepository extends BaseRepository {
       .set({ status })
       .where(eq(lobbies.id, lobbyId));
   }
+
+  async updateSettings(
+    lobbyId: string,
+    settings: { roundSeconds?: number; targetScore?: number },
+  ) {
+    const result = await this.db
+      .update(lobbies)
+      .set(settings)
+      .where(eq(lobbies.id, lobbyId))
+      .returning();
+
+    return result[0];
+  }
 }

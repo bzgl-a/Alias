@@ -24,8 +24,10 @@ export function setupLobbyRoutes(
   router.post("/:id/leave", leaveLobbyByUserId);
   router.patch("/:id/ready", changeReadyByUserId);
   router.post("/:id/teams", createTeam);
+  router.patch("/:id/teams/:teamId", renameTeam);
   router.patch("/:id/members/:userId/team", assignTeam);
   router.delete("/:id/teams/:teamId", deleteTeam);
+  router.patch("/:id/settings", updateSettings);
   router.post("/:id/reset", resetLobby);
   router.post("/:id/game/start", startGame);
 
@@ -159,6 +161,101 @@ export function setupLobbyRoutes(
       socketService.broadcastLobbyUpdated(lobby.id, lobby);
 
       res.status(201).json(lobby);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // +
+  async function renameTeam(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id, teamId } = req.params;
+      const { name, hostId } = req.body;
+
+      if (typeof id !== "string" || typeof teamId !== "string") {
+        throw new ValidationError("Invalid lobby or team id");
+      }
+
+      if (typeof name !== "string" || !name.trim()) {
+        throw new ValidationError("name is required");
+      }
+
+      if (name.trim().length > 32) {
+        throw new ValidationError("name must be at most 32 characters");
+      }
+
+      if (typeof hostId !== "string") {
+        throw new ValidationError("hostId is required");
+      }
+
+      const lobby = await lobbyService.renameTeam(
+        id,
+        hostId,
+        teamId,
+        name.trim(),
+      );
+
+      socketService.broadcastLobbyUpdated(lobby.id, lobby);
+
+      res.json(lobby);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // +
+  async function updateSettings(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const { id } = req.params;
+      const { hostId, roundSeconds, targetScore } = req.body;
+
+      if (typeof id !== "string") {
+        throw new ValidationError("Invalid lobby id");
+      }
+
+      if (typeof hostId !== "string") {
+        throw new ValidationError("hostId is required");
+      }
+
+      const settings: { roundSeconds?: number; targetScore?: number } = {};
+
+      if (roundSeconds !== undefined) {
+        if (
+          typeof roundSeconds !== "number" ||
+          !Number.isInteger(roundSeconds) ||
+          roundSeconds < 10 ||
+          roundSeconds > 300
+        ) {
+          throw new ValidationError(
+            "roundSeconds must be an integer between 10 and 300",
+          );
+        }
+        settings.roundSeconds = roundSeconds;
+      }
+
+      if (targetScore !== undefined) {
+        if (
+          typeof targetScore !== "number" ||
+          !Number.isInteger(targetScore) ||
+          targetScore < 5 ||
+          targetScore > 500
+        ) {
+          throw new ValidationError(
+            "targetScore must be an integer between 5 and 500",
+          );
+        }
+        settings.targetScore = targetScore;
+      }
+
+      const lobby = await lobbyService.updateSettings(id, hostId, settings);
+
+      socketService.broadcastLobbyUpdated(lobby.id, lobby);
+
+      res.json(lobby);
     } catch (err) {
       next(err);
     }

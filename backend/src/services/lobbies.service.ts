@@ -29,6 +29,9 @@ export class LobbyService {
     }
     await this.lobbyRepository.addMember(lobby.id, hostId);
 
+    await this.teamRepository.create({ lobbyId: lobby.id, name: "Команда 1" });
+    await this.teamRepository.create({ lobbyId: lobby.id, name: "Команда 2" });
+
     return this.getLobbyState(lobby.id);
   }
 
@@ -88,6 +91,61 @@ export class LobbyService {
     }
 
     await this.teamRepository.create({ lobbyId, name });
+    return this.getLobbyState(lobbyId);
+  }
+
+  async renameTeam(
+    lobbyId: string,
+    requesterId: string,
+    teamId: string,
+    name: string,
+  ) {
+    const lobby = await this.lobbyRepository.findById(lobbyId);
+
+    if (!lobby) {
+      throw new NotFoundError("Lobby");
+    }
+
+    if (lobby.hostId !== requesterId) {
+      throw new ForbiddenError("Only the host can rename teams");
+    }
+
+    const team = await this.teamRepository.findById(teamId);
+    if (!team || team.lobbyId !== lobbyId) {
+      throw new NotFoundError("Team");
+    }
+
+    await this.teamRepository.rename(teamId, name);
+    return this.getLobbyState(lobbyId);
+  }
+
+  async updateSettings(
+    lobbyId: string,
+    requesterId: string,
+    settings: { roundSeconds?: number; targetScore?: number },
+  ) {
+    const lobby = await this.lobbyRepository.findById(lobbyId);
+
+    if (!lobby) {
+      throw new NotFoundError("Lobby");
+    }
+
+    if (lobby.hostId !== requesterId) {
+      throw new ForbiddenError("Only the host can change lobby settings");
+    }
+
+    if (lobby.status !== "waiting") {
+      throw new ForbiddenError("Cannot change settings while game is running");
+    }
+
+    if (
+      settings.roundSeconds === undefined &&
+      settings.targetScore === undefined
+    ) {
+      throw new AppError("Nothing to update");
+    }
+
+    await this.lobbyRepository.updateSettings(lobbyId, settings);
     return this.getLobbyState(lobbyId);
   }
 

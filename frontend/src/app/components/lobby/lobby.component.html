@@ -38,6 +38,51 @@
           </button>
         </div>
 
+        <div class="w-100 card d-flex flex-column gap-1">
+          <span class="players-title">⚙️ Настройки игры</span>
+          <div class="d-flex align-items-center gap-3">
+            <label class="d-flex align-items-center gap-1">
+              <span class="text-muted">Очки для победы</span>
+              @if (isHost()) {
+                <input
+                  #targetScoreInput
+                  type="number"
+                  class="team-block--input"
+                  style="width: 150px"
+                  min="5"
+                  max="500"
+                  [value]="displayTargetScore()"
+                  (input)="onTargetScoreChange(targetScoreInput.value)"
+                  (change)="saveTargetScore()"
+                  (keydown.enter)="saveTargetScore(); targetScoreInput.blur()"
+                />
+              } @else {
+                <span class="fw-500">{{ displayTargetScore() }}</span>
+              }
+            </label>
+
+            <label class="d-flex align-items-center gap-1">
+              <span class="text-muted">Время раунда (сек)</span>
+              @if (isHost()) {
+                <input
+                  #roundSecondsInput
+                  type="number"
+                  class="team-block--input"
+                  style="width: 150px"
+                  min="10"
+                  max="300"
+                  [value]="displayRoundSeconds()"
+                  (input)="onRoundSecondsChange(roundSecondsInput.value)"
+                  (change)="saveRoundSeconds()"
+                  (keydown.enter)="saveRoundSeconds(); roundSecondsInput.blur()"
+                />
+              } @else {
+                <span class="fw-500">{{ displayRoundSeconds() }}</span>
+              }
+            </label>
+          </div>
+        </div>
+
         <div class="w-100 d-flex align-items-start gap-5">
           <div class="w-100 card d-flex flex-column gap-1">
             <div class="d-flex align-items-center justify-content-between">
@@ -100,7 +145,22 @@
                 <div
                   class="d-flex align-items-center justify-content-between mb-1"
                 >
-                  <span class="fw-500">{{ team.name }}</span>
+                  @if (editingTeamId() === team.id) {
+                    <input
+                      #teamRenameInput
+                      class="team-block--input"
+                      type="text"
+                      maxlength="32"
+                      autofocus
+                      [value]="editingTeamName()"
+                      (input)="onEditingTeamNameChange(teamRenameInput.value)"
+                      (keydown.enter)="confirmRenameTeam(team.id)"
+                      (keydown.escape)="cancelRenameTeam()"
+                      (blur)="confirmRenameTeam(team.id)"
+                    />
+                  } @else {
+                    <span class="fw-500">{{ team.name }}</span>
+                  }
 
                   <div class="d-flex gap-1">
                     @if (myTeamId() === team.id) {
@@ -121,7 +181,14 @@
                       </button>
                     }
 
-                    @if (isHost()) {
+                    @if (isHost() && editingTeamId() !== team.id) {
+                      <button
+                        type="button"
+                        class="btn btn--ghost btn--sm"
+                        (click)="startRenameTeam(team.id, team.name)"
+                      >
+                        Переименовать
+                      </button>
                       <button
                         type="button"
                         class="btn btn--ghost btn--sm"
