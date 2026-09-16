@@ -30,6 +30,16 @@ export class TeamRepository extends BaseRepository {
     return await this.db.select().from(teams).where(eq(teams.lobbyId, lobbyId));
   }
 
+  async rename(teamId: string, name: string) {
+    const result = await this.db
+      .update(teams)
+      .set({ name })
+      .where(eq(teams.id, teamId))
+      .returning();
+
+    return result[0];
+  }
+
   async delete(teamId: string) {
     const result = await this.db
       .delete(teams)

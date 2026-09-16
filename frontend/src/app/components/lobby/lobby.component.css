@@ -118,5 +118,12 @@
   width: 150px;
 }
 
-/* @media (max-width: 767px) {
-} */
+.team-block--input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.team-block--input[type="number"]::-webkit-inner-spin-button,
+.team-block--input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

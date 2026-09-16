@@ -92,6 +92,37 @@ export class LobbyService {
     });
   }
 
+  renameTeam(teamId: string, name: string): Observable<Lobby> {
+    const lobby = this.currentLobby();
+    const hostId = this.userService.currentUser()?.id;
+
+    if (!lobby) {
+      throw new Error('Not in a lobby');
+    }
+
+    return this.http.patch<Lobby>(
+      `${this.API_URL}/lobbies/${lobby.id}/teams/${teamId}`,
+      { name, hostId },
+    );
+  }
+
+  updateSettings(settings: {
+    roundSeconds?: number;
+    targetScore?: number;
+  }): Observable<Lobby> {
+    const lobby = this.currentLobby();
+    const hostId = this.userService.currentUser()?.id;
+
+    if (!lobby) {
+      throw new Error('Not in a lobby');
+    }
+
+    return this.http.patch<Lobby>(
+      `${this.API_URL}/lobbies/${lobby.id}/settings`,
+      { ...settings, hostId },
+    );
+  }
+
   deleteTeam(teamId: string): Observable<Lobby> {
     const lobby = this.currentLobby();
     const hostId = this.userService.currentUser()?.id;

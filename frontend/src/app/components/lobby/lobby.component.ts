@@ -36,6 +36,19 @@ export class LobbyComponent implements OnInit {
   readonly isJoining = signal(false);
   private readonly hasJoined = signal(false);
 
+  readonly editingTeamId = signal<string | null>(null);
+  readonly editingTeamName = signal('');
+
+  private readonly roundSecondsDraft = signal<number | null>(null);
+  private readonly targetScoreDraft = signal<number | null>(null);
+
+  readonly displayRoundSeconds = computed(
+    () => this.roundSecondsDraft() ?? this.currentLobby()?.roundSeconds ?? 60,
+  );
+  readonly displayTargetScore = computed(
+    () => this.targetScoreDraft() ?? this.currentLobby()?.targetScore ?? 30,
+  );
+
   readonly isMember = computed(() => {
     const lobby = this.currentLobby();
     const userId = this.currentUser()?.id;
@@ -151,7 +164,7 @@ export class LobbyComponent implements OnInit {
 
   public leaveLobby(): void {
     this.lobbyService.leaveLobby().subscribe({
-      next: () => this.router.navigate(['/hub']),
+      next: () => this.router.navigate(['/home']),
       error: () => {
         this.toastService.danger('Ошибка при выходе из лобби');
       },
@@ -200,6 +213,90 @@ export class LobbyComponent implements OnInit {
         this.toastService.danger('Не удалось создать команду');
       },
     });
+  }
+
+  public onRoundSecondsChange(value: string): void {
+    const num = Number(value);
+    if (!Number.isNaN(num)) this.roundSecondsDraft.set(num);
+  }
+
+  public onTargetScoreChange(value: string): void {
+    const num = Number(value);
+    if (!Number.isNaN(num)) this.targetScoreDraft.set(num);
+  }
+
+  public saveRoundSeconds(): void {
+    const value = this.roundSecondsDraft();
+    if (value === null || value === this.currentLobby()?.roundSeconds) {
+      this.roundSecondsDraft.set(null);
+      return;
+    }
+
+    if (value < 10 || value > 300) {
+      this.toastService.danger('Время на раунд должно быть от 10 до 300');
+      this.roundSecondsDraft.set(null);
+      return;
+    }
+
+    this.lobbyService.updateSettings({ roundSeconds: value }).subscribe({
+      next: () => this.roundSecondsDraft.set(null),
+      error: () => {
+        this.toastService.danger('Не удалось изменить время раунда');
+        this.roundSecondsDraft.set(null);
+      },
+    });
+  }
+
+  public saveTargetScore(): void {
+    const value = this.targetScoreDraft();
+    if (value === null || value === this.currentLobby()?.targetScore) {
+      this.targetScoreDraft.set(null);
+      return;
+    }
+
+    if (value < 5 || value > 500) {
+      this.toastService.danger('Количество очков должно быть от 5 до 500');
+      this.targetScoreDraft.set(null);
+      return;
+    }
+
+    this.lobbyService.updateSettings({ targetScore: value }).subscribe({
+      next: () => this.targetScoreDraft.set(null),
+      error: () => {
+        this.toastService.danger('Не удалось изменить количество очков');
+        this.targetScoreDraft.set(null);
+      },
+    });
+  }
+
+  public startRenameTeam(teamId: string, currentName: string): void {
+    this.editingTeamId.set(teamId);
+    this.editingTeamName.set(currentName);
+  }
+
+  public onEditingTeamNameChange(value: string): void {
+    this.editingTeamName.set(value);
+  }
+
+  public confirmRenameTeam(teamId: string): void {
+    const name = this.editingTeamName().trim();
+    this.editingTeamId.set(null);
+
+    const currentName = this.currentLobby()?.teams.find(
+      (t) => t.id === teamId,
+    )?.name;
+    if (!name || name === currentName) return;
+
+    this.lobbyService.renameTeam(teamId, name).subscribe({
+      next: () => {},
+      error: () => {
+        this.toastService.danger('Не удалось переименовать команду');
+      },
+    });
+  }
+
+  public cancelRenameTeam(): void {
+    this.editingTeamId.set(null);
   }
 
   public deleteTeam(teamId: string): void {
